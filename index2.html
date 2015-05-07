@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>NWS Test</title>
+	<script src="bower_components/jquery/dist/jquery.js" charset="utf-8"></script>
+	<script src="bower_components/highlightjs/highlight.pack.js" charset="utf-8"></script>
+
+	<link rel="stylesheet" href="bower_components/highlightjs/styles/color-brewer.css">
+
+	<style>
+	.code {
+		background-color: #f5f5f5;
+		border-bottom: 1px solid #ddd;
+	}
+	</style>
+</head>
+<body>
+	<pre id="codearea"></pre>
+
+	<script type="text/javascript">
+	hljs.initHighlightingOnLoad();
+
+	function mylog (t) {
+		var line = $('<code class="code javascript">').text(JSON.stringify(t, null, 2));
+
+		$('#codearea').append(line);
+
+		$('#codearea code').each(function(i, block) {
+			hljs.highlightBlock(block);
+		});
+	}
+
+	loc = {
+		"latitude": 33.4503998,
+		"longitude": -88.81838719999999
+	};
+
+	$.ajax({
+		method: 'GET',
+		dataType: 'jsonp',
+		url: 'http://forecast.weather.gov/MapClick.php?lat=' + loc.latitude + '&lon=' + loc.longitude + '&FcstType=json',
+		success: mylog,
+		error: function (jqXHR, textStatus, errorThrown) {
+			mylog(textStatus);
+		}
+	});
+
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>NWS Test</title>
+	<script src="bower_components/jquery/dist/jquery.js" charset="utf-8"></script>
+	<script src="bower_components/highlightjs/highlight.pack.js" charset="utf-8"></script>
+
+	<link rel="stylesheet" href="bower_components/highlightjs/styles/color-brewer.css">
+
+	<style>
+	.code {
+		background-color: #f5f5f5;
+		border-bottom: 1px solid #ddd;
+	}
+	</style>
+</head>
+<body>
+	<pre id="codearea"></pre>
+
+	<script type="text/javascript">
+	hljs.initHighlightingOnLoad();
+
+	function mylog (t) {
+		var line = $('<code class="code javascript">').text(JSON.stringify(t, null, 2));
+
+		$('#codearea').append(line);
+
+		$('#codearea code').each(function(i, block) {
+			hljs.highlightBlock(block);
+		});
+	}
+
+	function get_location(callback) {
+		if (navigator.geolocation) {
+			mylog(' ==> Getting location...');
+			navigator.geolocation.getCurrentPosition(function (position) {
+				mylog(' <== Got location.');
+				callback({
+					latitude: position.coords.latitude,
+					longitude: position.coords.longitude
+				});
+			}, function (error) {
+				switch(error.code) {
+					case error.PERMISSION_DENIED:
+						mylog('Denied the request for Geolocation.');
+						break;
+					case error.POSITION_UNAVAILABLE:
+						mylog('Location information is unavailable.');
+						break;
+					case error.TIMEOUT:
+						mylog('The request to get location timed out.');
+						break;
+					default:
+						mylog('An unknown error occurred.');
+						break;
+				}
+			}, {
+				timeout: 7000
+			});
+		} else {
+			alert('Location not supported.', null, 'warning');
+		}
+	}
+
+	$(function () {
+		get_location(function (loc) {
+			mylog(loc);
+			// $.ajax({
+			// 	method: 'GET',
+			// 	dataType: 'jsonp',
+			// 	url: 'http://forecast.weather.gov/MapClick.php?lat=' + loc.latitude + '&lon=' + loc.longitude + '&FcstType=json',
+			// 	success: mylog,
+			// 	error: function (jqXHR, textStatus, errorThrown) {
+			// 		mylog(textStatus);
+			// 	}
+			// });
+		});
+	});
+	</script>
+
+</body>
+</html>

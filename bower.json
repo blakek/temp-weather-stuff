@@ -1,0 +1,20 @@
+{
+  "name": "nws-test",
+  "version": "0.0.1",
+  "authors": [
+    "Blake Knight <oss.ideas@gmail.com>"
+  ],
+  "description": "Test NWS integration for weather-aware",
+  "main": "index.html",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4"
+  }
+}
