@@ -1,6 +1,6 @@
 var fs = require('fs')
   , xmldoc = require('xmldoc')
-  , geoloc = require('./geoloc')
+  , geoloc = require('./geoloc');
 
 function now() {
 	return Math.floor(Date.now() / 1000);
@@ -16,7 +16,7 @@ var j = JSON.parse(fs.readFileSync('./nws-local.json'));
 var na = fs.readFileSync('./nws-national-alerts.xml')
   , nadoc = new xmldoc.XmlDocument(na);
 
-var x = fs.readFileSync('./nws-local.xml')
+var x = fs.readFileSync('./test.xml')
   , doc = new xmldoc.XmlDocument(x);
 
 var parameters = doc.descendantWithPath('data.parameters')
@@ -31,7 +31,7 @@ var closestStormDistance;
 var closestStormBearing;
 
 nadoc.childrenNamed('entry').forEach(function (n) {
-	if (x = n.valueWithPath('cap:polygon')) {
+	if ((x = n.valueWithPath('cap:polygon')) !== '') {
 		x.split(' ').some(function (point) {
 			var loc = point.split(',');
 			var distance = geoloc.getDistance(loc[0], loc[1], here.lat, here.lon, 'mi');
@@ -46,22 +46,19 @@ nadoc.childrenNamed('entry').forEach(function (n) {
 
 			// Example: Getting all storms less than 50 mi away
 			if (distance < 50) {
-				console.log(n.valueWithPath('title'));
+				console.log('Nearby storm: ' + n.valueWithPath('title'));
 				return true;
 			}
 		});
 	}
 });
 
-console.log('Closest storm: ' + closestStorm.valueWithPath('title'));
-console.log('Closest storm distance: ' + Math.round(closestStormDistance));
-console.log('Closest storm bearing: ' + closestStormBearing);
-
 console.log({
 	last_updated: now(),
 	locaiton: {
-		latitude: doc.valueWithPath('data.location.point@latitude'),
-		longitude: doc.valueWithPath('data.location.point@longitude')
+		latitude: j.location.latitude,
+		longitude: j.location.longitude,
+		name: j.location.areaDescription
 	},
 	now: {
 		temp: temps.hourly.valueWithPath('value'),
@@ -72,6 +69,9 @@ console.log({
 	nearest_storm: {
 		bearing: closestStormBearing,
 		distance: closestStormDistance
+	},
+	precipitation: {
+		probability: ''
 	}
 });
 
