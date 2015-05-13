@@ -1,11 +1,16 @@
 var fs = require('fs')
   , async = require('async')
   , xmldoc = require('xmldoc')
-  , geolib = require('geolib');
+  , geolib = require('geolib')
+  , moment = require('moment');
 
 var lastCall = 0
   , cacheTime = 60
   , lastResults = {};
+
+var options = {
+	alertRange: 50
+}
 
 function source() {
 	return {
@@ -35,8 +40,8 @@ function findNearestStorms(location, callback) {
 		var alert = {
 			title: n.valueWithPath('title'),
 			event: n.valueWithPath('cap:event'),
-			effective: n.valueWithPath('cap:effective'),
-			expires: n.valueWithPath('cap:expires'),
+			effective: moment(n.valueWithPath('cap:effective')).format('X'),
+			expires: moment(n.valueWithPath('cap:expires')).format('X'),
 			summary: n.valueWithPath('summary'),
 			link: n.valueWithPath('link@href'),
 			polygon: []
@@ -64,12 +69,19 @@ function findNearestStorms(location, callback) {
 			}
 		});
 
-		alert.polygon.some(function (point) {
-			if (geolib.convertUnit('mi', geolib.getDistance(location, point)) < 50) {
-				nearbyAlerts.push(alert);
-			}
-			return true; // Go to next alert if one of the points of this alert is within the search radius
-		});
+		if (geolib.isPointInside(location, alert.polygon)) {
+			alert.distance = 0;
+			nearbyAlerts.push(alert);
+		} else {
+			alert.polygon.some(function (point) {
+				var distance = geolib.convertUnit('mi', geolib.getDistance(location, point));
+				if (distance < options.alertRange) {
+					alert.distance = distance;
+					nearbyAlerts.push(alert);
+				}
+				return true; // Go to next alert if one of the points of this alert is within the search radius
+			});
+		}
 
 		allAlerts.push(alert);
 	});
@@ -99,7 +111,6 @@ function getWeatherData(location, on_finish) {
 		on_finish(lastResults);
 		return;
 	} else {
-		console.log('Getting new results...');
 		lastCall = now();
 	}
 
@@ -118,10 +129,15 @@ function getWeatherData(location, on_finish) {
 
 			var doc = new xmldoc.XmlDocument(results.x)
 			  , parameters = doc.descendantWithPath('data.parameters')
-			  , temps = {};
+			  , temps = {}
+			  , pops_hourly = [];
 
 			parameters.childrenNamed('temperature').forEach(function (n) {
 				temps[n.attr.type] = n;
+			});
+
+			parameters.childNamed('probability-of-precipitation').childrenNamed('value').forEach(function (pop) {
+				pops_hourly.push(pop.val);
 			});
 
 			lastResults = {
@@ -131,14 +147,30 @@ function getWeatherData(location, on_finish) {
 					longitude: results.j.location.longitude,
 					name: results.j.location.areaDescription
 				},
+				nearest_storm: results.s.closestStorm,
+				alerts: results.s.nearbyAlerts,
+				alert_count: (results.s.nearbyAlerts) ? (results.s.nearbyAlerts.length) : 0,
 				now: {
 					temp: temps.hourly.valueWithPath('value'),
 					temp_apparent: temps.apparent.valueWithPath('value'),
 					conditions: results.j.currentobservation.Weather,
-					icon: results.j.data.iconLink[0]
+					icon: parameters.childNamed('conditions-icon').valueWithPath('icon-link'),
+					precipitation: {
+						probability: results.j.data.pop[0]
+					},
+					wind: {
+						speed: results.j.currentobservation.Winds,
+						bearing: results.j.currentobservation.Windd
+					}
 				},
-				nearest_storm: results.s.closestStorm,
-				nearby_alerts: results.s.nearbyAlerts
+				today: {
+					temp: {
+						high: temps.maximum.valueWithPath('value'),
+						low: temps.minimum.valueWithPath('value')
+					},
+					summary: results.j.data.text[0],
+					icon: results.j.data.iconLink[0]
+				}
 			};
 
 			on_finish(lastResults);
@@ -154,7 +186,8 @@ module.exports = {
 		source_site: 'http://www.weather.gov/', // Website of source for info (optional)
 		last_call: undefined // Last time this source was called. Used for caching request results (esp. to keep from using up free API keys)
 	},
-	getWeatherData: getWeatherData
+	getWeatherData: getWeatherData,
+	options: options
 };
 
 /*

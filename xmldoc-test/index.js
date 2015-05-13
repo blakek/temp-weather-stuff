@@ -1,24 +1,24 @@
 var fs = require('fs')
   , nws = require('./sources/wa-source-nws');
 
-// var here = {
-// 	latitude: 27.98,
-// 	longitude: -98.46
-// };
-
-// var here = {
-// 	latitude: 35.14,
-// 	longitude: -91.52
-// };
-
 var here = {
-	latitude: 33.46,
-	longitude: -88.8
+	latitude: 28.53,
+	longitude: -98.34
 };
 
-nws.getWeatherData(here, console.log);
+// var here = {
+// 	latitude: 33.46,
+// 	longitude: -88.8
+// };
+nws.options.alertRange = 50;
 
-nws.getWeatherData(here, console.log);
+nws.getWeatherData(here, function (data) {
+	console.log(data)
+});
+
+// setTimeout(function () {
+// 	nws.getWeatherData(here, console.log);
+// }, 3000);
 
 // nws.getWeatherData(here, function (data) {
 // 	// console.log(data.nearby_alerts);
