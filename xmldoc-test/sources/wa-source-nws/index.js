@@ -10,7 +10,7 @@ var lastCall = 0
 
 var options = {
 	alertRange: 50
-}
+};
 
 function source() {
 	return {
