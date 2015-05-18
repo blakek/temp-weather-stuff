@@ -1,5 +1,5 @@
 var fs = require('fs')
-  , nws = require('./sources/wa-source-nws');
+  , nws = require('wa-source-nws');
 
 var here = {
 	latitude: 28.53,
@@ -13,7 +13,7 @@ var here = {
 nws.options.alertRange = 50;
 
 nws.getWeatherData(here, function (data) {
-	console.log(data)
+	console.log(data);
 });
 
 // setTimeout(function () {

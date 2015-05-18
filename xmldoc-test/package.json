@@ -13,6 +13,7 @@
     "laxcomma": true
   },
   "dependencies": {
+    "wa-source-nws": "^0.1.1",
     "xmldoc": "^0.3.0"
   }
 }
