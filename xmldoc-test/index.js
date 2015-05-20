@@ -10,10 +10,12 @@ var here = {
 // 	latitude: 33.46,
 // 	longitude: -88.8
 // };
-nws.options.alertRange = 50;
+
+nws.options.testing = false;
+nws.options.alertRange = 75;
 
 nws.getWeatherData(here, function (data) {
-	console.log(data);
+	console.log(data.nearest_storm.polygon);
 });
 
 // setTimeout(function () {
